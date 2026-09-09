@@ -6,18 +6,63 @@ Tři veřejné datové zdroje se spojí do dokumentové databáze (MongoDB) a
 grafové databáze (Neo4j), nad nimiž se řeší dostupnost lékáren v Ústeckém
 kraji.
 
-## Zadání a co ho plní
+## Odevzdávané výstupy
 
-| Požadavek | Řešení |
+Zadání požaduje tři výstupy. Kde je najít:
+
+### 1. Schéma dokumentů / grafu
+
+**[`docs/schema.md`](docs/schema.md)** — obě schémata v jednom dokumentu:
+ukázky dokumentů MongoDB s komentářem u každého pole, tabulky uzlů a hran
+Neo4j, indexy, validátory, a pět rozhodnutí o modelu včetně jejich ceny.
+
+### 2. Skripty pro načtení dat
+
+```
+src/normalize.py        normalizace názvů, FIPS→NUTS, aliasy okresů
+src/parse_uzemi.py      XLSX ČSÚ    → hierarchie obcí
+src/parse_geonames.py   CZ.txt      → souřadnice a populace
+src/parse_lekarny.py    CSV registr → lékárny
+src/build.py            spojení tří zdrojů + report nekonzistencí
+src/load_mongo.py       zápis do MongoDB, 2dsphere indexy, $jsonSchema
+src/load_neo4j.py       zápis do Neo4j, kNN graf dostupnosti
+```
+
+Tok dat:
+
+```
+parse_uzemi.py    ┐
+parse_geonames.py ├→ build.py ┬→ load_mongo.py → MongoDB
+parse_lekarny.py  ┘           └→ load_neo4j.py → Neo4j
+        ↑
+   normalize.py  (používají všechny)
+```
+
+Řešení nekonzistencí identifikátorů je v `normalize.py` (kódové systémy)
+a `build.py` (dogeokódování, dvojznačné názvy) — přehled
+[níže](#řešené-nekonzistence).
+
+### 3. Kód zajišťující zpracování dat s dokumentací
+
+| Soubor | Obsah |
 |---|---|
-| návrh schématu dokumentů / uzlů a hran | [`docs/schema.md`](docs/schema.md) |
-| skript pro zpracování zdrojů, včetně nekonzistencí | `src/parse_*.py`, `src/build.py`, `src/normalize.py` |
-| návrh a implementace dotazů | `src/dotazy_mongo.py`, `src/dotazy_neo4j.py` |
-| tabulka počtů lékáren v okresech a ORP | `dotazy_mongo.pocty_okresy()`, `pocty_orp()` |
-| **neo4j:** minimální kostra dostupnosti | `dotazy_neo4j.kostra_souhrn()` — 351 hran, 986,53 km |
-| **mongo:** vzdálenost obcí od nejbližší lékárny, 10 nejvzdálenějších | `dotazy_mongo.nejvzdalenejsi_obce()` — max 14,98 km (Brandov) |
-| vlastní zpracování | 4 analýzy, viz [níže](#vlastní-zpracování) |
-| kód s dokumentací | docstringy v každém modulu, [`notebooks/analyza.ipynb`](notebooks/analyza.ipynb) |
+| `src/dotazy_mongo.py` | agregační pipeline — počty za okresy a ORP, vzdálenosti, 10 nejvzdálenějších, 4 vlastní analýzy |
+| `src/dotazy_neo4j.py` | Cypher a GDS — minimální kostra, počty průchodem grafu |
+| `src/vizualizace.py` | 7 grafů z výstupů pipeline (Matplotlib) |
+| [`notebooks/analyza.ipynb`](notebooks/analyza.ipynb) | vše pohromadě s výkladem u každého dotazu |
+| `src/kontrola.py` | ověření, co se ze zdrojů načetlo, s kontrolními součty |
+
+Dotazy ke zkopírování do grafických klientů: [`neo4j/dotazy.cypher`](neo4j/dotazy.cypher),
+[`mongo/pipelines.js`](mongo/pipelines.js).
+
+### Požadované zpracování
+
+| Úloha ze zadání | Kde | Výsledek |
+|---|---|---|
+| tabulka počtů lékáren v okresech a ORP | `dotazy_mongo.pocty_okresy()`, `pocty_orp()` | 7 okresů, 16 ORP |
+| **neo4j:** minimální kostra dostupnosti | `dotazy_neo4j.kostra_souhrn()` | 351 hran, 986,53 km |
+| **mongo:** vzdálenost obcí od nejbližší lékárny, 10 nejvzdálenějších | `dotazy_mongo.nejvzdalenejsi_obce()` | max 14,98 km (Brandov) |
+| vlastní zpracování | viz [níže](#vlastní-zpracování) | 4 analýzy |
 
 ## Rychlý start
 
