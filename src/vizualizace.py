@@ -1,13 +1,8 @@
 """
-Vizualizace výsledků agregačních pipeline (Matplotlib).
+Vizualizace výsledků dotazů (Matplotlib).
 
-Grafy vznikají z VÝSTUPU DOTAZŮ nad databází, ne z původních CSV/XLSX —
-to je požadavek zadání okruhu. Každá funkce si data vytáhne přes modul
-dotazy_mongo (Mongo) nebo dotazy_neo4j (Neo4j) a vrátí objekt Figure,
-takže se dá použít v notebooku i uložit do PNG skriptem.
-
-Spuštění jako skript vyrobí všechny grafy do out/:
-    PYTHONPATH=src .venv/bin/python src/vizualizace.py
+Grafy vznikají z výstupů agregačních pipeline, ne ze zdrojových souborů.
+Spuštění jako skript vyrobí všechny grafy do out/.
 """
 
 from pathlib import Path

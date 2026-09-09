@@ -1,26 +1,7 @@
 """
-Naplnění MongoDB: kolekce, indexy, schéma validace, zápis dokumentů.
+Naplnění MongoDB: kolekce obce a lékárny, 2dsphere indexy, validace.
 
-Zvolené schéma — dvě kolekce, ne jedna:
-
-    obce     dokument = obec (354), uvnitř vnořená hierarchie ORP/okres/kraj
-             + GeoJSON Point středu + populace + počet lékáren
-    lekarny  dokument = lékárna (167), uvnitř vnořená adresa a územní
-             příslušnost + GeoJSON Point + řetězec
-
-Proč zvlášť, a ne lékárny vnořené do obcí:
-  - $geoNear musí být PRVNÍ stupeň pipeline a pracuje nad kolekcí, ne nad
-    vnořeným polem. Úloha "nejbližší lékárna k obci" by se s vnořenými
-    lékárnami dělat nedala.
-  - lékárny se čtou i samostatně (přehled řetězců, hustota na obyvatele)
-  - obec i lékárna se mění nezávisle na sobě
-
-Proč naopak hierarchie ORP/okres/kraj JE vnořená:
-  - poměr 1:málo a čte se vždy s obcí
-  - žádná agregace za okresy nepotřebuje $lookup, stačí $group
-
-Vědomá denormalizace: ORP a názvy okresů jsou zkopírované i do lékáren.
-Cena za to je popsaná v build.postav_lekarny.
+Schéma a zdůvodnění rozdělení do dvou kolekcí viz docs/schema.md.
 """
 
 import sys

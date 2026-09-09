@@ -1,14 +1,5 @@
 """
-Dotazy nad grafem v Neo4j, včetně minimální kostry dostupnosti lékáren.
-
-Hlavní úloha ze zadání: minimální kostra grafu obcí, kde ohodnocením hrany
-je geografická vzdálenost. Kostra je nejlevnější podmnožina hran, která
-udrží graf spojitý — interpretace pro tuto úlohu je "nejkratší možná síť
-spojnic, po níž je dosažitelná každá obec v kraji".
-
-Past v GDS: gds.spanningTree.stream vrací i řádek pro KOŘEN stromu,
-kde nodeId == parentId a weight = 0. Bez jeho odfiltrování vyjde o jednu
-hranu víc, než strom může mít (n uzlů -> n-1 hran).
+Dotazy nad Neo4j včetně minimální kostry dostupnosti (GDS spanningTree).
 """
 
 from neo4j import GraphDatabase

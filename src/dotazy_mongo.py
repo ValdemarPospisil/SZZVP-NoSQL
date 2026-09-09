@@ -1,24 +1,7 @@
 """
 Dotazy nad MongoDB — agregační pipeline.
 
-Zadání okruhu preferuje agregační operace před find(), takže všechny
-dotazy jsou postavené jako pipeline. Každá funkce vrací seznam dictů,
-aby šel výstup rovnou do pandas.DataFrame a do grafu.
-
-Hlavní úloha ze zadání: vzdálenost středu obce od nejbližší lékárny
-pro obce bez vlastní lékárny, deset nejvzdálenějších.
-
-Dvě pasti, na které jsem narazil a jsou v kódu ošetřené:
-
-1) MongoDB 8 zrušilo parametr 'limit' uvnitř $geoNear. Starší tutoriály
-   píšou {"$geoNear": {..., "limit": 1}}, což skončí chybou
-   "no longer supports the 'limit' parameter". Správně je samostatný
-   stupeň $limit za ním.
-
-2) $geoNear musí být PRVNÍ stupeň pipeline. Pro výpočet "nejbližší
-   lékárna ke každé obci" se proto použije $lookup s vnořenou pipeline,
-   kde $geoNear je první uvnitř té vnořené — a hodnota z nadřazeného
-   dokumentu se předá přes 'let'.
+Každá funkce vrací seznam dictů, aby výstup šel rovnou do DataFrame.
 """
 
 from pymongo import MongoClient

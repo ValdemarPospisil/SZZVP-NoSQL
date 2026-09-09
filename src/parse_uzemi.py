@@ -1,27 +1,9 @@
 """
 Parser územní struktury ČR z XLSX ČSÚ (soubor 0043).
 
-Tenhle zdroj je AUTORITATIVNÍ hierarchie: jedině on říká, do kterého ORP
-a okresu obec patří. Geonames má sídel čtyřikrát víc než ČR obcí (obsahuje
-i části obcí a osady), takže seznam obcí musí vzniknout tady.
-
-Formát listu (jeden list = jeden rok, 1.1.2013 .. 1.1.2024):
-  řádek 0  slučované nadpisy skupin (LAU 2 - Obec, ..., NUTS 3 - Kraj, ...)
-  řádek 1  podnadpisy (kód / název / status)
-  řádek 2+ data, jedna obec na řádek
-
-Indexy sloupců (0-based) — pořadí je v celém souboru stejné:
-   0 obec_kod      1 obec_nazev    2 status
-   3 pou_kod       4 pou_nazev
-   5 orp_kod       6 orp_nazev
-   7 okres_kod     8 okres_nazev
-   9 kraj_kod     10 kraj_nazev
-  11 nuts2_kod    12 nuts2_nazev
-
-POZOR na záměnu POÚ a ORP:
-  POÚ = obec s pověřeným obecním úřadem (nižší úroveň, pětimístný kód)
-  ORP = obec s rozšířenou působností (vyšší úroveň, čtyřmístný kód, 205 v ČR)
-Zadání chce počty za okresy a ORP -> potřebujeme sloupce 5/6, ne 3/4.
+Autoritativní hierarchie obec → POÚ → ORP → okres → kraj. Jeden list
+na rok (1.1.2013 až 1.1.2024), dvouřádková hlavička, indexy sloupců
+napevno.
 """
 
 from pathlib import Path

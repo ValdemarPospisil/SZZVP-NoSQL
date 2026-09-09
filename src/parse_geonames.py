@@ -1,27 +1,8 @@
 """
-Parser Geonames pro ČR: CZ.txt (objekty) + admin2Codes.txt (kódy okresů).
+Parser Geonames pro ČR: CZ.txt (objekty) + admin2Codes.txt (okresy).
 
-Geonames je v úloze ZDROJ GEOMETRIE — dodává souřadnice středů obcí, které
-ani XLSX ČSÚ, ani registr lékáren neobsahují. Autoritativní seznam obcí
-z něj brát nelze: ČR má 6 258 obcí, ale Geonames má 16 634 sídel, protože
-zahrnuje i části obcí, osady a samoty.
-
-Dvě nekompatibility, které musí parser překlenout:
-
-1) Geonames používá u kraje kód FIPS ("89"), ne NUTS ("CZ042").
-   -> překlad tabulkou normalize.FIPS_TO_NUTS3
-
-2) admin2Codes.txt nemá NUTS kód okresu vůbec; zná jen "CZ.89.0426" a
-   název "Okres Teplice". Okres se proto dohledává PODLE NÁZVU proti XLSX
-   (parse_uzemi.mapa_okresu), po normalizaci a s aliasy.
-
-Formát CZ.txt — 19 polí oddělených tabulátorem, bez hlavičky
-(schéma viz data/CZ/readme.txt):
-   0 geonameid       1 name          2 asciiname     3 alternatenames
-   4 latitude        5 longitude     6 feature_class 7 feature_code
-   8 country_code    9 cc2          10 admin1(FIPS) 11 admin2
-  12 admin3         13 admin4       14 population   15 elevation
-  16 dem            17 timezone     18 modification_date
+Zdroj geometrie — souřadnice středů obcí a populace. Obsahuje ale i části
+obcí a osady, takže seznam obcí musí pocházet z ČSÚ.
 """
 
 from collections import defaultdict

@@ -1,26 +1,8 @@
 """
 Spojení tří zdrojů do finálních dokumentů + report nekonzistencí.
 
-Tady se schází autoritativní hierarchie (ČSÚ), geometrie (Geonames)
-a předmět analýzy (registr lékáren). Výstupem jsou dvě kolekce dokumentů
-připravené k zápisu do MongoDB i k převodu na uzly a hrany v Neo4j —
-schéma je společné, aby šla stejná data porovnat ve dvou modelech.
-
-Tok dat:
-    XLSX (354 obcí ÚK)  ---nazev+okres--->  Geonames (1270 sídel)
-             |                                    |
-             |  hierarchie ORP/okres              |  lat/lng, populace
-             v                                    v
-        OBEC {_id, nazev, orp, okres, loc, populace}
-             ^
-             |  Obec + OkresCode
-        lekarny_uk.csv (167)  ->  LEKARNA {_id, nazev, loc, obec_kod, ...}
-
-Souřadnice se ukládají jako GeoJSON Point, protože MongoDB nad ním umí
-index 2dsphere a operaci $geoNear (nutná pro úlohu "nejbližší lékárna").
-POZOR na pořadí: GeoJSON je [longitude, latitude], tedy obráceně, než jak
-se souřadnice běžně čtou. Záměna je klasická chyba — bod by spadl mimo
-souřadnicový rozsah nebo do Indického oceánu.
+Výstup je společný pro MongoDB i Neo4j, aby šla stejná data porovnat
+ve dvou modelech. Schéma viz docs/schema.md.
 """
 
 from normalize import KRAJ_UK_NUTS, norm

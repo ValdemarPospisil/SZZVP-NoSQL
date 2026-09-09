@@ -1,17 +1,8 @@
 """
-Normalizace identifikátorů a názvů — jádro řešení nekonzistencí mezi zdroji.
+Normalizace názvů a převody mezi kódovými systémy zdrojů.
 
-Tři zdroje dat používají tři různé identifikační systémy a jediné, co je
-spolehlivě spojuje, je NÁZEV. Proto tu je normalizace názvů a překladové
-tabulky mezi kódovými systémy.
-
-Přehled systémů:
-  - ČSÚ / NRPZS (XLSX, lekarny_uk.csv) — NUTS/LAU kódy: kraj CZ042,
-    okres CZ0426, obec 567043 (šestimístný kód obce)
-  - Geonames (CZ.txt)                  — admin1 = FIPS kód kraje ("89"),
-    admin2 = čtyřznakový kód okresu ("0426"), vlastní geonameid
-  - admin2Codes.txt                    — klíč "CZ.89.0426" + název
-    "Okres Teplice", BEZ jakéhokoli NUTS kódu
+Zdroje používají NUTS/LAU (ČSÚ), FIPS (Geonames) a vlastní klíče
+(admin2Codes); spojuje je jedině název, proto normalizace názvů.
 """
 
 import unicodedata

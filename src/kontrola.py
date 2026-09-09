@@ -1,11 +1,7 @@
 """
-Kontrolní výpis stavu zdrojových dat — spusť a uvidíš, co skripty načetly.
+Kontrolní výpis stavu zdrojových dat — co skripty ze souborů načtou.
 
-Nezapisuje do databází, jen čte soubory z data/ a tiskne, co v nich je.
-Účel: každé tvrzení o datech (počty, nekonzistence, napojení kódů) si má jít
-ověřit jedním příkazem, ne věřit na slovo.
-
-Spuštění z korene repozitáře:
+Nezapisuje do databází. Spuštění z korene repozitáře:
     PYTHONPATH=src .venv/bin/python src/kontrola.py
 """
 

@@ -1,27 +1,8 @@
 """
 Parser lékáren z registru NRPZS (lekarny_uk.csv).
 
-Lékárny jsou vlastní předmět analýzy — 167 míst poskytování lékárenské péče
-v Ústeckém kraji. Soubor je proti ostatním zdrojům čistý: OkresCode je
-vyplněný u všech řádků a MistoPoskytovaniId je bez duplicit, takže napojení
-na okres je bezproblémové.
-
-Nekonzistence, které parser řeší:
-
-1) 3 lékárny nemají souřadnice (Lat/Lng prázdné). Dogeokódují se na střed
-   obce z Geonames a dostanou příznak geo_zdroj="obec", aby bylo v datech
-   poznat, že poloha je přibližná. Zamlčet to nelze — ovlivňuje to výpočty
-   vzdáleností.
-
-2) U 3 lékáren je DruhZarizeni slepenec víc druhů (poliklinika, která má
-   i lékárnu). Parsuje se na seznam, aby šel dotaz "Lékárna in druhy".
-
-3) Sloupce s příponou Sidlo jsou adresa SÍDLA FIRMY, ne lékárny. Dr. Max
-   má sídlo v Brně, takže geokódování podle nich by umístilo desítky
-   lékáren do Brna. Do výstupu jdou zvlášť a nikdy se nepoužijí jako poloha.
-
-Nepoužitelné sloupce: SpravniObvod je prázdný u všech řádků,
-PoskytovatelFax téměř všude, OdbornyZastupce je slepenec až 17 jmen.
+Předmět analýzy: 167 míst poskytování lékárenské péče v Ústeckém kraji.
+Sloupce s příponou Sidlo jsou adresa sídla firmy, ne polohy lékárny.
 """
 
 import csv

@@ -1,37 +1,7 @@
 """
-Naplnění Neo4j: uzly, hrany a graf dostupnosti pro minimální kostru.
+Naplnění Neo4j: uzly, hierarchie a kNN graf dostupnosti pro kostru.
 
-Schéma grafu — uzly:
-
-    (:Kraj   {kod, nazev})
-    (:Okres  {kod, nazev})
-    (:ORP    {kod, nazev})
-    (:Obec   {kod, nazev, status, populace, poloha, lekaren, ma_lekarnu})
-    (:Lekarna{id, nazev, retezec, poloha, geo_zdroj})
-
-hrany:
-
-    (:Okres)   -[:V_KRAJI]->   (:Kraj)
-    (:ORP)     -[:V_OKRESE]->  (:Okres)      hierarchie ČSÚ
-    (:Obec)    -[:V_ORP]->     (:ORP)
-    (:Obec)    -[:V_OKRESE]->  (:Okres)      zkratka, viz níže
-    (:Lekarna) -[:V_OBCI]->    (:Obec)
-    (:Obec)    -[:BLIZKO {km}]-(:Obec)       graf dostupnosti pro kostru
-
-Proč je hierarchie grafem a ne vlastnostmi uzlu:
-  v Neo4j je vztah prvotřídní objekt, takže dotaz "kolik lékáren v ORP"
-  je průchod hran, ne agregace nad zkopírovanými hodnotami. Tím se
-  vyhneme denormalizaci, kterou musí dělat Mongo.
-
-Proč přesto existuje zkratka (:Obec)-[:V_OKRESE]->(:Okres):
-  hranice ORP a okresů se nekryjí (okres Litoměřice se dělí na 3 ORP),
-  takže okres NELZE odvodit průchodem přes ORP. Je to samostatný fakt
-  ze zdroje, ne redundance.
-
-Hrany BLIZKO tvoří graf dostupnosti, nad kterým se počítá minimální
-kostra. Úplný graf 354 obcí by měl 62 481 hran, což je pro kostru
-zbytečné — proto se hrany omezují na k nejbližších sousedů (kNN),
-což kostru nezmění, dokud graf zůstane spojitý.
+Schéma grafu viz docs/schema.md.
 """
 
 import math
