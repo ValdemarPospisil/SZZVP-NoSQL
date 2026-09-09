@@ -1,0 +1,6 @@
+pymongo
+neo4j
+openpyxl
+pandas
+matplotlib
+jupyter
