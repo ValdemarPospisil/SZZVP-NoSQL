@@ -13,6 +13,7 @@ import collections
 
 from parse_geonames import (index_sidel, nacti_okresy_geonames, nacti_sidla,
                             napoj_okresy_na_nuts, vyber_stred)
+from parse_lekarny import nacti_lekarny, urci_retezec
 from parse_uzemi import LIST_AKTUALNI, mapa_okresu, nacti_obce, zmeny_prislusnosti
 
 
@@ -148,5 +149,58 @@ print("\n  Ukázka jednoho sídla (celý záznam):")
 vzorek = max(sidla, key=lambda s: s["populace"])
 for k, v in vzorek.items():
     print(f"     {k:<20} {v}")
+
+# ---------------------------------------------------------------------------
+hlavicka("5. LÉKÁRNY (registr NRPZS)")
+
+lekarny = nacti_lekarny()
+print(f"  lékáren v CSV:                 {len(lekarny)}")
+print(f"  unikátních identifikátorů:     {len({l['_id'] for l in lekarny})}"
+      f"   (duplicity: {len(lekarny) - len({l['_id'] for l in lekarny})})")
+print(f"  označených jako Lékárna:       {sum(1 for l in lekarny if l['je_lekarna'])}")
+print(f"  obcí s alespoň jednou lékárnou: {len({l['adresa']['obec_norm'] for l in lekarny})}")
+print(f"  obcí BEZ lékárny (z {len(obce_uk)}):    "
+      f"{len(obce_uk) - len({l['adresa']['obec_norm'] for l in lekarny})}"
+      f"   <- předmět úlohy 'nejbližší lékárna'")
+
+print("\n  NEKONZISTENCE 1 — lékárny bez souřadnic v registru:")
+bez_geo = [l for l in lekarny if l["lat"] is None]
+tabulka([[l["_id"], l["adresa"]["obec"], l["uzemi"]["okres_nazev"],
+          f"{l['adresa']['ulice'] or '?'} {l['adresa']['cislo'] or ''}".strip(),
+          l["nazev"][:34]] for l in bez_geo],
+        ["id", "obec", "okres", "adresa", "název"])
+print("     -> dogeokódují se na střed obce, příznak geo_zdroj='obec'")
+
+print("\n  NEKONZISTENCE 2 — slepený sloupec DruhZarizeni:")
+for l in [x for x in lekarny if len(x["druhy_zarizeni"]) > 1]:
+    print(f"     {l['_id']}  {len(l['druhy_zarizeni'])} druhů: {', '.join(l['druhy_zarizeni'])}")
+print("     -> parsováno na seznam, filtr 'Lékárna' in druhy_zarizeni")
+
+print("\n  NEKONZISTENCE 3 — sídlo firmy != poloha lékárny:")
+sidla_jinde = [l for l in lekarny
+               if l["poskytovatel"]["sidlo_okres_kod"]
+               and not str(l["poskytovatel"]["sidlo_okres_kod"]).startswith("CZ042")]
+print(f"     lékáren se sídlem firmy mimo Ústecký kraj: {len(sidla_jinde)}")
+sidla_obce = collections.Counter(l["poskytovatel"]["sidlo_obec"] for l in sidla_jinde)
+tabulka([[o, n] for o, n in sidla_obce.most_common(5)], ["sídlo firmy", "lékáren"])
+print("     -> geokódovat podle sídla by tyto lékárny přesunulo mimo kraj")
+
+print("\n  Lékárny podle okresů (registr):")
+po_okr = collections.Counter(
+    (l["uzemi"]["okres_kod"], l["uzemi"]["okres_nazev"]) for l in lekarny)
+tabulka([[k[0], k[1], n, po_okresech.get(k, "?")]
+         for k, n in sorted(po_okr.items())],
+        ["kód", "okres", "lékáren", "obcí"])
+print(f"  součet: {sum(po_okr.values())} (musí být {len(lekarny)})")
+
+print("\n  Lékárny podle řetězců (vlastní analýza — koncentrace trhu):")
+tabulka([[j, n, f"{100*n/len(lekarny):.1f} %"]
+         for j, n in collections.Counter(
+             urci_retezec(l["nazev"]) for l in lekarny).most_common()],
+        ["řetězec", "lékáren", "podíl"])
+
+print("\n  Ukázka jedné lékárny (celý dokument, jak půjde do Mongo):")
+for k, v in lekarny[0].items():
+    print(f"     {k:<16} {v}")
 
 hlavicka("HOTOVO — vše výše načteno přímo ze souborů v data/")
