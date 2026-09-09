@@ -268,6 +268,8 @@ Kalek–Boleboř 7,69 km, Kryštofovy Hamry–Vejprty 7,4 km) — jsou to kritic
 spojení, jejichž ztráta rozdělí síť. Hory se objevují jako překážka v obou
 analýzách nezávisle.
 
+Snímky grafu z Neo4j Browseru jsou v [`docs/schema.md`](docs/schema.md#23-kostra-v-neo4j-browseru).
+
 ### Vlastní zpracování
 
 **1. Lékárenská pustina** — vážení vzdálenosti počtem obyvatel přeskládá

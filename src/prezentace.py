@@ -19,6 +19,7 @@ import dotazy_mongo as dm
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "out"
+OBRAZKY = ROOT / "docs" / "obrazky"
 CIL = OUT / "prezentace.pptx"
 
 # Barvy sladěné s grafy ve vizualizace.py
@@ -102,6 +103,21 @@ def odrazky(slide, body, s=Cm(1.5), t=Cm(3.7), sirka=None, velikost=17,
             else:
                 r.font.color.rgb = SEDA if uroven == 0 else SVETLA
     return tb
+
+
+def obrazek_z(slide, cesta, s, t, sirka=None, vyska=None):
+    """
+    Vloží obrázek z libovolné cesty na dané místo.
+
+    Používá se pro snímky grafu z Neo4j Browseru (docs/obrazky/), které
+    nevznikají skriptem jako grafy v out/.
+    """
+    cesta = Path(cesta)
+    if not cesta.exists():
+        raise FileNotFoundError(f"chybí {cesta}")
+    if sirka:
+        return slide.shapes.add_picture(str(cesta), s, t, width=sirka)
+    return slide.shapes.add_picture(str(cesta), s, t, height=vyska)
 
 
 def obrazek(slide, jmeno, t=Cm(3.4), vyska=None, max_sirka=None):
@@ -335,6 +351,44 @@ vyšlo 352 hran, což strom mít nemůže.
 Nejdelší hrany jsou všechny v Krušných horách — kritická spojení, jejichž
 ztráta rozdělí síť na dva celky.
 [cíl: 1:15]""")
+
+    # --- 8b. Kostra jako graf (snímky z Neo4j Browseru) ---
+    sl = prazdny_slide(prs)
+    nadpis(sl, "Kostra v Neo4j Browseru",
+           "vlevo všech 351 hran, vpravo jen 20 kritických spojení nad 5 km")
+    obrazek_z(sl, OBRAZKY / "kostra-cela.png", Cm(-0.4), Cm(3.4), sirka=Cm(17.4))
+    obrazek_z(sl, OBRAZKY / "kostra-kriticka.png", Cm(16.9), Cm(3.4), sirka=Cm(17.4))
+    _, _, pl = text(sl, Cm(0.8), Cm(13.4), Cm(15.4), Cm(1.2),
+                    zarovnani=PP_ALIGN.CENTER)
+    r = pl.add_run()
+    r.text = "MATCH p=()-[:V_KOSTRE]-() RETURN p"
+    r.font.size = Pt(13)
+    r.font.name = "DejaVu Sans Mono"
+    r.font.color.rgb = SVETLA
+    _, _, pp = text(sl, Cm(17.0), Cm(13.4), Cm(15.4), Cm(1.2),
+                    zarovnani=PP_ALIGN.CENTER)
+    r = pp.add_run()
+    r.text = "MATCH p=()-[r:V_KOSTRE]-() WHERE r.km > 5 RETURN p"
+    r.font.size = Pt(13)
+    r.font.name = "DejaVu Sans Mono"
+    r.font.color.rgb = SVETLA
+    odrazky(sl, [
+        "Filtr nepočítá jinou kostru — jen z téže kostry zobrazuje **20 nejdelších hran**",
+        "Zbylé řetízky sedí na **Krušných horách** (Kalek–Boleboř, Český Jiřetín–Klíny–Moldava, Kryštofovy Hamry–Vejprty–Kovářská), **Šluknovsku** a **Podbořansku**",
+    ], t=Cm(15.0), velikost=15, rozestup=Pt(4))
+    poznamka(sl, """
+Takhle kostra vypadá v Neo4j Browseru.
+Vlevo je celá — 351 hran. Jednotlivé názvy přečíst nejde, ale je vidět, že
+je to jeden spojitý útvar bez cyklů, tedy skutečně strom.
+Vpravo je stejná kostra po filtru na hrany nad pět kilometrů. Zbylo dvacet
+hran a rozpadly se na krátké řetízky — to není chyba, jsou to úseky, kde je
+síť nejvíc napnutá.
+A když si přečtete jména, je z nich vidět geografie: Kalek-Boleboř,
+Český Jiřetín-Klíny-Moldava, Kryštofovy Hamry-Vejprty-Kovářská jsou všechno
+krušnohorský hřeben. Šluknov se Starými Křečany je výběžek, Petrohrad-Kryry
+a Deštnice-Holedeč jsou Podbořansko.
+Takže nedostupnost není rozprostřená náhodně, sedí na horách a okrajích kraje.
+[cíl: 45 sekund]""")
 
     # --- 9. Vlastní zpracování ---
     sl = prazdny_slide(prs)

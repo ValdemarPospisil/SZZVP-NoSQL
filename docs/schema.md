@@ -167,6 +167,47 @@ se graf snadno rozpadne. Spojitost se po načtení ověřuje (352 z 352 dosažit
 **Hrany `V_KOSTRE`** jsou zapsaný výsledek `gds.spanningTree`, aby šla kostra
 zobrazit v Browseru samostatně místo všech 1 266 hran `BLIZKO`.
 
+### 2.3 Kostra v Neo4j Browseru
+
+Celá kostra — všech 351 hran. Jednotlivé názvy přečíst nejde, ale je vidět,
+že jde o jeden spojitý útvar bez cyklů, tedy skutečně strom:
+
+```cypher
+MATCH p=()-[:V_KOSTRE]-() RETURN p
+```
+
+![Celá minimální kostra](obrazky/kostra-cela.png)
+
+Táž kostra po filtru na hrany delší než 5 kilometrů. Filtr **nepočítá jinou
+kostru** — jen z ní zobrazuje 20 nejdelších hran, tedy kritická spojení:
+
+```cypher
+MATCH p=()-[r:V_KOSTRE]-() WHERE r.km > 5 RETURN p
+```
+
+![Kritická spojení kostry](obrazky/kostra-kriticka.png)
+
+Po filtru se graf rozpadne na krátké řetízky. Není to chyba — jsou to úseky,
+kde je síť nejvíc napnutá, a jména obcí prozradí, kde leží:
+
+| Řetízek | Oblast |
+|---|---|
+| Kalek — Boleboř | Krušné hory |
+| Český Jiřetín — Klíny — Moldava | krušnohorský hřeben |
+| Kryštofovy Hamry — Vejprty — Kovářská | Krušné hory, hranice |
+| Nová Ves v Horách — Horní Jiřetín — Litvínov | krušnohorské podhůří |
+| Šluknov — Staré Křečany | Šluknovský výběžek |
+| Kytlice — Chřibská, Doubice — Jetřichovice | České Švýcarsko |
+| Petrohrad — Kryry, Deštnice — Holedeč | Podbořansko (okres Louny) |
+
+Nedostupnost tedy není rozprostřená náhodně: sedí na horách a okrajích kraje.
+Totéž vyšlo nezávisle z mongo úlohy — nejvzdálenější obce od lékáren
+(Brandov, Kalek, Hora Svaté Kateřiny) leží ve stejné oblasti.
+
+Snímky jsou export z Browseru (`docs/obrazky/`, k dispozici i v SVG). Hrany
+v nich nesou výchozí popisek typu `V_KOSTRE`; číselné délky jsou
+v `out/07_kostra.png` a v `dotazy_neo4j.kostra_hrany()`.
+
 ---
 
 ## 3. Rozhodnutí o modelu a jejich cena
@@ -254,20 +295,3 @@ normalizace názvů (`normalize.norm_okres`) nutná, ne kosmetická. Výsledek:
 98 záznamů Geonames pokryje všech 77 okresů ČSÚ.
 
 ---
-
-## 5. Odmítnuté varianty
-
-**Jedna kolekce `misto` s příznakem typu.** Obce a lékárny by byly v jedné
-kolekci s polem `typ: "obec" | "lekarna"`. Umožnilo by to jeden `$geoNear`
-nad vším, ale za cenu, že každý dotaz musí filtrovat podle typu a validace
-schématu by musela být sjednocením dvou nesourodých tvarů.
-
-**Uložení všech 12 ročních řezů hierarchie.** XLSX obsahuje roky 2013–2024.
-Verzování dokumentů obcí (`platnost_od`, `platnost_do`) je zajímavé
-modelovací téma, ale pro zadané úlohy je zbytečné — analýza pracuje
-s aktuálním stavem. Změny mezi řezy se místo toho počítají na vyžádání
-(`parse_uzemi.zmeny_prislusnosti`) a jsou samostatným výstupem.
-
-**Úplný graf vzdáleností v Neo4j.** 61 776 hran místo 1 266. Kostra by vyšla
-stejně, protože Primův algoritmus stejně vybírá jen nejkratší hrany, ale
-projekce do GDS a vykreslení v Browseru by byly zbytečně těžké.
