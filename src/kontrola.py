@@ -14,6 +14,7 @@ import collections
 from parse_geonames import (index_sidel, nacti_okresy_geonames, nacti_sidla,
                             napoj_okresy_na_nuts, vyber_stred)
 from parse_lekarny import nacti_lekarny, urci_retezec
+from build import postav_vse
 from parse_uzemi import LIST_AKTUALNI, mapa_okresu, nacti_obce, zmeny_prislusnosti
 
 
@@ -201,6 +202,60 @@ tabulka([[j, n, f"{100*n/len(lekarny):.1f} %"]
 
 print("\n  Ukázka jedné lékárny (celý dokument, jak půjde do Mongo):")
 for k, v in lekarny[0].items():
+    print(f"     {k:<16} {v}")
+
+# ---------------------------------------------------------------------------
+hlavicka("6. SPOJENÍ ZDROJŮ (build.py) — finální dokumenty")
+
+obce_f, lekarny_f, rep = postav_vse()
+
+print("  OBCE")
+print(f"     celkem:            {rep['obce']['obci']}")
+print(f"     se souřadnicemi:   {rep['obce']['s_geometrii']}"
+      f"   (napojeno na Geonames podle názvu + okresu)")
+print(f"     s populací:        {rep['obce']['s_populaci']}")
+print(f"     BEZ souřadnic:     {len(rep['obce']['bez_geometrie'])}")
+for o in rep["obce"]["bez_geometrie"]:
+    print(f"        {o['kod']} {o['nazev']} (okres {o['okres']}) "
+          f"-> nemá záznam v Geonames, vyloučena z geodotazů")
+print(f"     víceznačných názvů vyřešeno: {len(rep['obce']['viceznacne_nazvy'])}")
+for v in rep["obce"]["viceznacne_nazvy"]:
+    print(f"        {v['obec']} ({v['okres']}): {v['kandidatu']} kandidátů "
+          f"-> vybrán geonameid {v['vybran']}")
+
+print("\n  LÉKÁRNY")
+print(f"     celkem:            {rep['lekarny']['lekaren']}")
+print(f"     se souřadnicemi:   {rep['lekarny']['s_geometrii']} "
+      f"(z registru {rep['lekarny']['z_registru']}, "
+      f"dogeokódováno {len(rep['lekarny']['dogeokodovane'])})")
+for d in rep["lekarny"]["dogeokodovane"]:
+    print(f"        {d['lekarna']} {d['nazev'][:38]:<38} -> střed obce {d['obec']}")
+print(f"     napojeno na obec:  {rep['lekarny']['napojenych_na_obec']} "
+      f"z {rep['lekarny']['lekaren']}")
+print(f"     nenapojeno:        {len(rep['lekarny']['nenapojene'])}")
+print(f"     rozpor v okrese registr vs. ČSÚ: "
+      f"{len(rep['lekarny']['okres_se_rozchazi'])}")
+
+print("\n  VÝSLEDEK PRO ZADANÉ ÚLOHY")
+print(f"     obcí s lékárnou:   {rep['obci_s_lekarnou']}")
+print(f"     obcí bez lékárny:  {rep['obci_bez_lekarny']}"
+      f"   <- vstup pro 'nejbližší lékárna' a kostru")
+
+print("\n  Obce s nejvíc lékárnami:")
+tabulka([[o["_id"], o["nazev"], o["status_popis"], o["lekaren"],
+          o["populace"] or "?",
+          f"{o['lekaren']/o['populace']*10000:.1f}" if o.get("populace") else "?"]
+         for o in sorted(obce_f, key=lambda x: -x["lekaren"])[:10]],
+        ["kód", "obec", "status", "lékáren", "obyvatel", "lék./10 tis."])
+
+print("\n  Ukázka dokumentu OBEC (jak půjde do Mongo):")
+vzorek = max(obce_f, key=lambda o: o["lekaren"])
+for k, v in vzorek.items():
+    print(f"     {k:<14} {v}")
+
+print("\n  Ukázka dokumentu LEKARNA (dogeokódovaná — všimni si geo_zdroj):")
+vzorek = next(l for l in lekarny_f if l["geo_zdroj"] == "obec")
+for k, v in vzorek.items():
     print(f"     {k:<16} {v}")
 
 hlavicka("HOTOVO — vše výše načteno přímo ze souborů v data/")
