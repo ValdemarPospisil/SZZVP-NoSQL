@@ -1,0 +1,54 @@
+# Prostředí pro úlohu: MongoDB (dokumentový model) + Neo4j (grafový model).
+# Obě databáze běží současně, aby šlo stejná data porovnat ve dvou modelech.
+services:
+  mongo:
+    image: mongo:8
+    container_name: szzvp-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  neo4j:
+    image: neo4j:5-community
+    container_name: szzvp-neo4j
+    ports:
+      - "7474:7474"   # webové rozhraní (Neo4j Browser)
+      - "7687:7687"   # protokol Bolt pro ovladač
+    environment:
+      # Bez autentizace – lokální vývojové prostředí, žádná citlivá data.
+      NEO4J_AUTH: none
+      # GDS = Graph Data Science, kvůli algoritmu minimální kostry (spanningTree).
+      NEO4J_PLUGINS: '["graph-data-science","apoc"]'
+      NEO4J_dbms_security_procedures_unrestricted: 'gds.*,apoc.*'
+    volumes:
+      - neo4j-data:/data
+    healthcheck:
+      test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "neo4j", "RETURN 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+  # Webový prohlížeč MongoDB — Mongo samo žádné GUI nemá, na rozdíl od Neo4j,
+  # který má vlastní Browser na portu 7474.
+  # Dostupné na http://localhost:8081 (bez přihlašování).
+  mongo-express:
+    image: mongo-express:1.0.2
+    container_name: szzvp-mongo-express
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://mongo:27017/
+      ME_CONFIG_BASICAUTH: "false"
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+volumes:
+  mongo-data:
+  neo4j-data:
