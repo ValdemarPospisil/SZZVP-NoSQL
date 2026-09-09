@@ -1,10 +1,3 @@
-"""
-Normalizace názvů a převody mezi kódovými systémy zdrojů.
-
-Zdroje používají NUTS/LAU (ČSÚ), FIPS (Geonames) a vlastní klíče
-(admin2Codes); spojuje je jedině název, proto normalizace názvů.
-"""
-
 import unicodedata
 
 # ---------------------------------------------------------------------------
@@ -12,18 +5,6 @@ import unicodedata
 # ---------------------------------------------------------------------------
 
 def norm(s) -> str:
-    """
-    Převede název na kanonickou podobu pro porovnávání mezi zdroji.
-
-    Odstraní diakritiku, sjednotí velikost písmen a zredukuje vnitřní mezery.
-    Bez tohohle by se "Ústí nad Labem" a "Usti nad Labem" (ASCII varianta
-    z geonames) nikdy nespojily.
-
-    >>> norm("Ústí nad  Labem")
-    'usti nad labem'
-    >>> norm("Brno-město")
-    'brno-mesto'
-    """
     if s is None:
         return ""
     # NFKD rozloží 'ú' na 'u' + kombinující čárku, encode ASCII čárku zahodí.
@@ -32,11 +13,6 @@ def norm(s) -> str:
     return " ".join(s.lower().split())
 
 
-# ---------------------------------------------------------------------------
-# Kraje: FIPS (geonames admin1) -> NUTS 3
-# ---------------------------------------------------------------------------
-# Geonames uvádí u českých záznamů FIPS kód kraje, ne NUTS. Bez téhle tabulky
-# nelze geonames sídlo přiřadit ke kraji z XLSX.
 FIPS_TO_NUTS3 = {
     "52": "CZ010",  # Praha (v geonames vedena jako samostatný admin1)
     "78": "CZ064",  # Jihomoravský
@@ -59,18 +35,6 @@ KRAJ_UK_NUTS = "CZ042"
 KRAJ_UK_FIPS = "89"
 
 
-# ---------------------------------------------------------------------------
-# Okresy: aliasy názvů mezi geonames a ČSÚ
-# ---------------------------------------------------------------------------
-# Spojení okresů podle názvu uspěje u 75 ze 77. Zbytek jsou tyto dvě anomálie
-# (ověřeno porovnáním admin2Codes.txt s listem 1.1.2024):
-#
-#   1) geonames "Město Brno"  vs. ČSÚ "Brno-město"      -> alias
-#   2) geonames dělí Prahu na 22 městských částí
-#      ("Praha 1".."Praha 22"), ČSÚ má jeden okres CZ0100 -> agregace
-#
-# Ústeckého kraje se ani jedna netýká, ale skript má být obecný — a u obhajoby
-# je právě tohle ta "nekonzistence identifikátorů" ze zadání.
 OKRES_ALIAS = {
     "mesto brno": "brno-mesto",
 }

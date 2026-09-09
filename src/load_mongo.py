@@ -13,10 +13,6 @@ from build import postav_vse
 MONGO_URI = "mongodb://localhost:27017/"
 DB_NAME = "lekarny"
 
-# Validační schéma kolekce obce. Mongo je schemaless, ale $jsonSchema umí
-# kontrolovat zápisy — ukazuje, že volba "bez schématu" je rozhodnutí,
-# ne neznalost. Validace je záměrně mírná: povinné je jen to, na čem stojí
-# dotazy, a loc smí být null (2 obce bez záznamu v Geonames).
 SCHEMA_OBCE = {
     "$jsonSchema": {
         "bsonType": "object",

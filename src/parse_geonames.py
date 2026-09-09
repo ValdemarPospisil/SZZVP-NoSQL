@@ -15,13 +15,8 @@ ROOT = Path(__file__).resolve().parent.parent
 CZ_TXT = ROOT / "data" / "CZ" / "CZ.txt"
 ADMIN2 = ROOT / "data" / "admin2Codes.txt"
 
-# feature_class 'P' = populated place (sídla). Ostatní třídy (H vodstvo,
-# T terén, S stavby, A administrativní jednotky, L plochy) pro úlohu nejsou
-# potřeba — filtrujeme je hned při čtení, ať se 43 tisíc řádků nedrží v paměti.
 TRIDA_SIDLA = "P"
 
-# Sídla, která NEjsou obcí ani její částí — vyloučená z kandidátů na střed obce.
-# PPLW = zaniklé sídlo, PPLQ = opuštěné sídlo, PPLH = historické sídlo.
 KODY_NEEXISTUJICICH = {"PPLW", "PPLQ", "PPLH"}
 
 

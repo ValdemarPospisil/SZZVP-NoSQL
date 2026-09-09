@@ -1,5 +1,3 @@
-# Prostředí pro úlohu: MongoDB (dokumentový model) + Neo4j (grafový model).
-# Obě databáze běží současně, aby šlo stejná data porovnat ve dvou modelech.
 services:
   mongo:
     image: mongo:8
@@ -18,12 +16,10 @@ services:
     image: neo4j:5-community
     container_name: szzvp-neo4j
     ports:
-      - "7474:7474"   # webové rozhraní (Neo4j Browser)
-      - "7687:7687"   # protokol Bolt pro ovladač
+      - "7474:7474"
+      - "7687:7687"
     environment:
-      # Bez autentizace – lokální vývojové prostředí, žádná citlivá data.
       NEO4J_AUTH: none
-      # GDS = Graph Data Science, kvůli algoritmu minimální kostry (spanningTree).
       NEO4J_PLUGINS: '["graph-data-science","apoc"]'
       NEO4J_dbms_security_procedures_unrestricted: 'gds.*,apoc.*'
     volumes:
@@ -34,9 +30,6 @@ services:
       timeout: 10s
       retries: 10
 
-  # Webový prohlížeč MongoDB — Mongo samo žádné GUI nemá, na rozdíl od Neo4j,
-  # který má vlastní Browser na portu 7474.
-  # Dostupné na http://localhost:8081 (bez přihlašování).
   mongo-express:
     image: mongo-express:1.0.2
     container_name: szzvp-mongo-express

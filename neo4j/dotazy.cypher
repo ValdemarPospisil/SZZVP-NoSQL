@@ -1,11 +1,3 @@
-// Připravené dotazy pro Neo4j Browser (http://localhost:7474).
-// Zkopíruj jeden dotaz do horního řádku a spusť Ctrl+Enter.
-//
-// Nejdřív nastav vzhled, aby uzly nesly názvy místo kódů:
-//   přetáhni do okna soubor neo4j/style.grass, nebo spusť :style a vlož obsah.
-// Ručně: klikni na štítek uzlu v legendě nad grafem -> Caption -> nazev.
-
-
 // --- 1. MINIMÁLNÍ KOSTRA DOSTUPNOSTI -------------------------------------
 // Celá kostra: 351 hran, 986,53 km. Hrany nesou vzdálenost v km.
 MATCH p=()-[:V_KOSTRE]-() RETURN p;

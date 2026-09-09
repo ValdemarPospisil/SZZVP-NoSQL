@@ -1,13 +1,3 @@
-/* Vzhled grafu pro Neo4j Browser: uzly popsané názvem, ne kódem.
- *
- * Nahrání: v Browseru přetáhni tento soubor do okna, nebo spusť
- *     :style
- * a vlož obsah. Uloží se do prohlížeče a vydrží mezi sezeními.
- *
- * Ruční varianta bez souboru: klikni na štítek uzlu v legendě nad grafem
- * a v části Caption vyber vlastnost "nazev".
- */
-
 node {
   diameter: 50px;
   color: #A5ABB6;

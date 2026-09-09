@@ -1,85 +1,89 @@
-// Agregační pipeline pro MongoDB Compass a mongosh.
-//
-// Compass: záložka Aggregations -> ikona "..." -> Import pipeline from text,
-//          nebo vlož pole [...] přímo. POZOR na kolekci, nad kterou pipeline
-//          spouštíš — je uvedená v komentáři u každého dotazu.
-// mongosh: use lekarny; pak db.<kolekce>.aggregate([...])
-//
-// Rozdíl proti src/dotazy_mongo.py: tady je JavaScript syntaxe (true/null),
-// v Pythonu je True/None. Jinak jsou pipeline totožné.
-
-
 // ===========================================================================
-// 1. DESET NEJVZDÁLENĚJŠÍCH OBCÍ BEZ LÉKÁRNY  (hlavní úloha ze zadání)
+// 1. DESET NEJVZDÁLENĚJŠÍCH OBCÍ BEZ LÉKÁRNY 
 // kolekce: obce
 // ===========================================================================
-// $geoNear musí být PRVNÍ stupeň pipeline, proto je uvnitř $lookup, kde
-// 'let' předá polohu nadřazené obce jako $$stred. Mongo 8 nepodporuje
-// parametr 'limit' uvnitř $geoNear, musí následovat samostatný $limit.
 [
   { $match: { ma_lekarnu: false, loc: { $ne: null } } },
-  { $lookup: {
+  {
+    $lookup: {
       from: "lekarny",
       as: "nejblizsi",
       let: { stred: "$loc" },
       pipeline: [
-        { $geoNear: {
+        {
+          $geoNear: {
             near: "$$stred",
             distanceField: "vzdalenost_m",
             spherical: true
-        } },
+          }
+        },
         { $limit: 1 },
-        { $project: { vzdalenost_m: 1, nazev: 1, retezec: 1,
-                      obec: "$adresa.obec" } }
+        {
+          $project: {
+            vzdalenost_m: 1, nazev: 1, retezec: 1,
+            obec: "$adresa.obec"
+          }
+        }
       ]
-  } },
+    }
+  },
   { $unwind: "$nejblizsi" },
-  { $project: {
+  {
+    $project: {
       obec: "$nazev",
       okres: "$okres.nazev",
       orp: "$orp.nazev",
       populace: 1,
-      km: { $round: [ { $divide: [ "$nejblizsi.vzdalenost_m", 1000 ] }, 2 ] },
+      km: { $round: [{ $divide: ["$nejblizsi.vzdalenost_m", 1000] }, 2] },
       lekarna_v: "$nejblizsi.obec",
       retezec: "$nejblizsi.retezec"
-  } },
+    }
+  },
   { $sort: { km: -1 } },
   { $limit: 10 }
 ]
 
 
 // ===========================================================================
-// 2. POČTY LÉKÁREN A OBCÍ ZA OKRESY  (povinná tabulka)
+// 2. POČTY LÉKÁREN A OBCÍ ZA OKRESY
 // kolekce: obce
 // ===========================================================================
-// Jedna pipeline pro obojí: $lookup natáhne lékárny okresu, takže není
-// potřeba spojovat dvě agregace v aplikaci.
 [
-  { $group: {
+  {
+    $group: {
       _id: "$okres.kod",
       okres: { $first: "$okres.nazev" },
       obci: { $sum: 1 },
-      obci_s_lekarnou: { $sum: { $cond: [ "$ma_lekarnu", 1, 0 ] } },
-      populace: { $sum: { $ifNull: [ "$populace", 0 ] } }
-  } },
-  { $lookup: {
+      obci_s_lekarnou: { $sum: { $cond: ["$ma_lekarnu", 1, 0] } },
+      populace: { $sum: { $ifNull: ["$populace", 0] } }
+    }
+  },
+  {
+    $lookup: {
       from: "lekarny",
       localField: "_id",
       foreignField: "uzemi.okres_kod",
       as: "lek"
-  } },
-  { $project: {
+    }
+  },
+  {
+    $project: {
       _id: 0,
       kod: "$_id",
       okres: 1,
       obci: 1,
       obci_s_lekarnou: 1,
-      obci_bez_lekarny: { $subtract: [ "$obci", "$obci_s_lekarnou" ] },
+      obci_bez_lekarny: { $subtract: ["$obci", "$obci_s_lekarnou"] },
       lekaren: { $size: "$lek" },
       populace: 1,
-      lekaren_na_10tis: { $round: [ { $multiply: [
-          { $divide: [ { $size: "$lek" }, "$populace" ] }, 10000 ] }, 2 ] }
-  } },
+      lekaren_na_10tis: {
+        $round: [{
+          $multiply: [
+            { $divide: [{ $size: "$lek" }, "$populace"] }, 10000]
+        }, 2]
+      }
+    }
+  },
   { $sort: { kod: 1 } }
 ]
 
@@ -89,30 +93,40 @@
 // kolekce: obce
 // ===========================================================================
 [
-  { $group: {
+  {
+    $group: {
       _id: "$orp.kod",
       orp: { $first: "$orp.nazev" },
       obci: { $sum: 1 },
-      obci_s_lekarnou: { $sum: { $cond: [ "$ma_lekarnu", 1, 0 ] } },
-      populace: { $sum: { $ifNull: [ "$populace", 0 ] } }
-  } },
-  { $lookup: {
+      obci_s_lekarnou: { $sum: { $cond: ["$ma_lekarnu", 1, 0] } },
+      populace: { $sum: { $ifNull: ["$populace", 0] } }
+    }
+  },
+  {
+    $lookup: {
       from: "lekarny",
       localField: "_id",
       foreignField: "uzemi.orp_kod",
       as: "lek"
-  } },
-  { $project: {
+    }
+  },
+  {
+    $project: {
       _id: 0,
       kod: "$_id",
       orp: 1,
       obci: 1,
       obci_s_lekarnou: 1,
-      obci_bez_lekarny: { $subtract: [ "$obci", "$obci_s_lekarnou" ] },
+      obci_bez_lekarny: { $subtract: ["$obci", "$obci_s_lekarnou"] },
       lekaren: { $size: "$lek" },
-      lekaren_na_10tis: { $round: [ { $multiply: [
-          { $divide: [ { $size: "$lek" }, "$populace" ] }, 10000 ] }, 2 ] }
-  } },
+      lekaren_na_10tis: {
+        $round: [{
+          $multiply: [
+            { $divide: [{ $size: "$lek" }, "$populace"] }, 10000]
+        }, 2]
+      }
+    }
+  },
   { $sort: { kod: 1 } }
 ]
 
@@ -123,34 +137,48 @@
 // ===========================================================================
 [
   { $match: { ma_lekarnu: false, loc: { $ne: null } } },
-  { $lookup: {
+  {
+    $lookup: {
       from: "lekarny", as: "n", let: { stred: "$loc" },
       pipeline: [
         { $geoNear: { near: "$$stred", distanceField: "d", spherical: true } },
         { $limit: 1 }
       ]
-  } },
+    }
+  },
   { $unwind: "$n" },
-  { $addFields: { km: { $round: [ { $divide: [ "$n.d", 1000 ] }, 2 ] } } },
-  { $group: {
+  { $addFields: { km: { $round: [{ $divide: ["$n.d", 1000] }, 2] } } },
+  {
+    $group: {
       _id: null,
       obci: { $sum: 1 },
       prumer_km: { $avg: "$km" },
       min_km: { $min: "$km" },
       max_km: { $max: "$km" },
-      median_km: { $percentile: { input: "$km", p: [ 0.5 ],
-                                  method: "approximate" } },
-      obci_nad_5km: { $sum: { $cond: [ { $gt: [ "$km", 5 ] }, 1, 0 ] } },
-      obci_nad_10km: { $sum: { $cond: [ { $gt: [ "$km", 10 ] }, 1, 0 ] } },
-      obyvatel_nad_5km: { $sum: { $cond: [ { $gt: [ "$km", 5 ] },
-                                  { $ifNull: [ "$populace", 0 ] }, 0 ] } }
-  } },
-  { $project: {
+      median_km: {
+        $percentile: {
+          input: "$km", p: [0.5],
+          method: "approximate"
+        }
+      },
+      obci_nad_5km: { $sum: { $cond: [{ $gt: ["$km", 5] }, 1, 0] } },
+      obci_nad_10km: { $sum: { $cond: [{ $gt: ["$km", 10] }, 1, 0] } },
+      obyvatel_nad_5km: {
+        $sum: {
+          $cond: [{ $gt: ["$km", 5] },
+          { $ifNull: ["$populace", 0] }, 0]
+        }
+      }
+    }
+  },
+  {
+    $project: {
       _id: 0, obci: 1, obci_nad_5km: 1, obci_nad_10km: 1, obyvatel_nad_5km: 1,
       min_km: 1, max_km: 1,
-      prumer_km: { $round: [ "$prumer_km", 2 ] },
-      median_km: { $round: [ { $first: "$median_km" }, 2 ] }
-  } }
+      prumer_km: { $round: ["$prumer_km", 2] },
+      median_km: { $round: [{ $first: "$median_km" }, 2] }
+    }
+  }
 ]
 
 
@@ -162,25 +190,33 @@
 // nejdál (14,98 km), ale má 249 obyvatel. Součin dává osobokilometry.
 [
   { $match: { ma_lekarnu: false, loc: { $ne: null }, populace: { $ne: null } } },
-  { $lookup: {
+  {
+    $lookup: {
       from: "lekarny", as: "n", let: { stred: "$loc" },
       pipeline: [
         { $geoNear: { near: "$$stred", distanceField: "d", spherical: true } },
         { $limit: 1 },
         { $project: { d: 1, obec: "$adresa.obec" } }
       ]
-  } },
+    }
+  },
   { $unwind: "$n" },
-  { $project: {
+  {
+    $project: {
       _id: 0,
       obec: "$nazev",
       okres: "$okres.nazev",
       populace: 1,
-      km: { $round: [ { $divide: [ "$n.d", 1000 ] }, 2 ] },
-      osobokm: { $round: [ { $multiply: [
-          "$populace", { $divide: [ "$n.d", 1000 ] } ] }, 0 ] },
+      km: { $round: [{ $divide: ["$n.d", 1000] }, 2] },
+      osobokm: {
+        $round: [{
+          $multiply: [
+            "$populace", { $divide: ["$n.d", 1000] }]
+        }, 0]
+      },
       lekarna_v: "$n.obec"
-  } },
+    }
+  },
   { $sort: { osobokm: -1 } },
   { $limit: 10 }
 ]
@@ -193,23 +229,33 @@
 // Dvoustupňový pivot: první $group po (okres, řetězec), druhý sbalí
 // řádek na okres a spočítá podíl největšího hráče.
 [
-  { $group: {
+  {
+    $group: {
       _id: { okres: "$uzemi.okres_nazev", retezec: "$retezec" },
       pocet: { $sum: 1 }
-  } },
-  { $group: {
+    }
+  },
+  {
+    $group: {
       _id: "$_id.okres",
       celkem: { $sum: "$pocet" },
       retezce: { $push: { retezec: "$_id.retezec", pocet: "$pocet" } }
-  } },
-  { $project: {
+    }
+  },
+  {
+    $project: {
       _id: 0,
       okres: "$_id",
       celkem: 1,
       retezce: { $sortArray: { input: "$retezce", sortBy: { pocet: -1 } } },
-      nejvetsi_podil: { $round: [ { $multiply: [
-          { $divide: [ { $max: "$retezce.pocet" }, "$celkem" ] }, 100 ] }, 1 ] }
-  } },
+      nejvetsi_podil: {
+        $round: [{
+          $multiply: [
+            { $divide: [{ $max: "$retezce.pocet" }, "$celkem"] }, 100]
+        }, 1]
+      }
+    }
+  },
   { $sort: { celkem: -1 } }
 ]
 
@@ -223,16 +269,22 @@
 // Poměrový ukazatel na malém základu je nutné umět přečíst.
 [
   { $match: { lekaren: { $gt: 0 }, populace: { $ne: null } } },
-  { $project: {
+  {
+    $project: {
       _id: 0,
       obec: "$nazev",
       okres: "$okres.nazev",
       status: "$status_popis",
       lekaren: 1,
       populace: 1,
-      na_10tis: { $round: [ { $multiply: [
-          { $divide: [ "$lekaren", "$populace" ] }, 10000 ] }, 2 ] }
-  } },
+      na_10tis: {
+        $round: [{
+          $multiply: [
+            { $divide: ["$lekaren", "$populace"] }, 10000]
+        }, 2]
+      }
+    }
+  },
   { $sort: { na_10tis: -1 } },
   { $limit: 10 }
 ]
@@ -245,25 +297,12 @@
 // 164 lékáren má přesnou adresu z registru, 3 jen střed obce
 // (Louny, Lovosice, Ústí nad Labem) — ovlivňuje to spolehlivost vzdáleností.
 [
-  { $group: {
+  {
+    $group: {
       _id: "$geo_zdroj",
       pocet: { $sum: 1 },
       obce: { $addToSet: "$adresa.obec" }
-  } },
+    }
+  },
   { $sort: { pocet: -1 } }
 ]
-
-
-// ===========================================================================
-// 9. OVĚŘENÍ POUŽITÍ INDEXU  (mongosh, ne Compass)
-// ===========================================================================
-// Compass ukazuje "Explain" tlačítkem, v mongosh takto. V plánu musí být
-// stupeň GEO_NEAR_2DSPHERE s indexem lekarny_loc_2dsphere.
-//
-//   use lekarny
-//   db.obce.findOne({nazev: "Brandov"})   // vezmi jeho loc
-//   db.lekarny.explain().aggregate([
-//     { $geoNear: { near: { type: "Point", coordinates: [13.42, 50.63] },
-//                   distanceField: "d", spherical: true } },
-//     { $limit: 3 }
-//   ])

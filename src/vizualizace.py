@@ -1,8 +1,5 @@
 """
 Vizualizace výsledků dotazů (Matplotlib).
-
-Grafy vznikají z výstupů agregačních pipeline, ne ze zdrojových souborů.
-Spuštění jako skript vyrobí všechny grafy do out/.
 """
 
 from pathlib import Path
