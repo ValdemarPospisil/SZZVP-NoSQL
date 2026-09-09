@@ -1,0 +1,80 @@
+/* Vzhled grafu pro Neo4j Browser: uzly popsané názvem, ne kódem.
+ *
+ * Nahrání: v Browseru přetáhni tento soubor do okna, nebo spusť
+ *     :style
+ * a vlož obsah. Uloží se do prohlížeče a vydrží mezi sezeními.
+ *
+ * Ruční varianta bez souboru: klikni na štítek uzlu v legendě nad grafem
+ * a v části Caption vyber vlastnost "nazev".
+ */
+
+node {
+  diameter: 50px;
+  color: #A5ABB6;
+  border-color: #9AA1AC;
+  border-width: 2px;
+  text-color-internal: #FFFFFF;
+  font-size: 10px;
+}
+
+relationship {
+  color: #A5ABB6;
+  shaft-width: 1px;
+  font-size: 8px;
+  padding: 3px;
+  text-color-external: #000000;
+  text-color-internal: #FFFFFF;
+  caption: "<type>";
+}
+
+/* Obce: název obce, modrá, velikost podle důležitosti */
+node.Obec {
+  color: #68BDF6;
+  border-color: #5CA8DB;
+  caption: "{nazev}";
+  diameter: 50px;
+}
+
+/* Lékárny: název obce, kde stojí (vlastní název je dlouhý), zelená */
+node.Lekarna {
+  color: #6DCE9E;
+  border-color: #60B58B;
+  caption: "{popis}";
+  diameter: 40px;
+}
+
+/* Územní jednotky: název, teplé barvy, větší kolečka */
+node.ORP {
+  color: #FFD86E;
+  border-color: #EDBA39;
+  text-color-internal: #604A0E;
+  caption: "{nazev}";
+  diameter: 65px;
+}
+
+node.Okres {
+  color: #FF756E;
+  border-color: #E06760;
+  caption: "{nazev}";
+  diameter: 80px;
+}
+
+node.Kraj {
+  color: #DE9BF9;
+  border-color: #BF85D6;
+  caption: "{nazev}";
+  diameter: 95px;
+}
+
+/* Hrany kostry: zobrazit vzdálenost v km */
+relationship.V_KOSTRE {
+  color: #F79767;
+  shaft-width: 3px;
+  caption: "{km} km";
+}
+
+relationship.BLIZKO {
+  color: #C0C0C0;
+  shaft-width: 1px;
+  caption: "";
+}

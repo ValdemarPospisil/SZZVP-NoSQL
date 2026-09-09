@@ -161,6 +161,10 @@ def naplnit(uri=NEO4J_URI, k=K_SOUSEDU):
         MERGE (l:Lekarna {id: r.id})
         SET l.nazev = r.nazev, l.retezec = r.retezec, l.geo_zdroj = r.geo_zdroj,
             l.obec_nazev = r.obec_nazev, l.ulice = r.ulice,
+            // Krátký popisek pro zobrazení v Browseru: plný název z registru
+            // má až 80 znaků ("ČESKÁ LÉKÁRNA HOLDING, a.s., Dr. Max Lékárna")
+            // a v kolečku uzlu se nevejde.
+            l.popis = r.retezec + ' ' + r.obec_nazev,
             l.poloha = CASE WHEN r.lat IS NULL THEN NULL
                        ELSE point({latitude: r.lat, longitude: r.lng, crs:'WGS-84'}) END
         WITH l, r
