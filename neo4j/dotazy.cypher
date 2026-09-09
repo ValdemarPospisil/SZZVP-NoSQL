@@ -26,8 +26,23 @@ ORDER BY km DESC LIMIT 15;
 MATCH p=(:Kraj)<-[:V_KRAJI]-(:Okres)<-[:V_OKRESE]-(:ORP) RETURN p;
 
 // Jeden okres s obcemi a lékárnami.
+// POZOR: tento dotaz ukáže jen obce, které lékárnu MAJÍ (3 z 26 v okrese
+// Most). MATCH vyžaduje celý vzor, takže obec bez navázané lékárny vypadne
+// z výsledku úplně — není to vinou LIMITu, dotaz vrací jen 18 cest.
 MATCH p=(:Okres {nazev:'Most'})<-[:V_OKRESE]-(b:Obec)<-[:V_OBCI]-(:Lekarna)
 RETURN p LIMIT 60;
+
+// Správně všech 26 obcí okresu: OPTIONAL MATCH se chová jako LEFT JOIN,
+// obec vrátí i bez lékárny.
+MATCH p1=(:Kraj)<-[:V_KRAJI]-(o:Okres {nazev:'Most'})<-[:V_OKRESE]-(b:Obec)
+OPTIONAL MATCH p2=(b)<-[:V_OBCI]-(:Lekarna)
+RETURN p1, p2;
+
+// Naopak jen obce BEZ lékárny — WHERE NOT (vzor) je negace existence.
+// V okrese Most jich je 23 z 26, největší Lom s 3762 obyvateli.
+MATCH p=(:Okres {nazev:'Most'})<-[:V_OKRESE]-(b:Obec)
+WHERE NOT (b)<-[:V_OBCI]-(:Lekarna)
+RETURN p;
 
 // Pozor: okres NELZE odvodit průchodem přes ORP, hranice se nekryjí.
 // Tento dotaz to ukáže — okres Litoměřice se dělí na 3 ORP.
