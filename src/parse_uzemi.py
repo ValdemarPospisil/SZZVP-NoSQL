@@ -39,12 +39,16 @@ XLSX_PATH = ROOT / "data" / "0043_Struktura uzemi CR 1.1.2013 - 1.1.2024.xlsx"
 LIST_AKTUALNI = "1.1.2024"
 LIST_HISTORICKY = "1.1.2013"
 
-# Status obce podle ČSÚ; rozepsáno kvůli čitelnosti výstupů.
+# Status obce — legenda je uvedena v listu "Komentář" zdrojového XLSX.
+# Ověřeno proti datům: v souboru se vyskytuje všech šest hodnot
+# (O 5413, M 583, T 231, S 26, U 4, H 1).
 STATUS_POPIS = {
+    "H": "hlavní město",
     "M": "město",
     "O": "obec",
-    "V": "vojenský újezd",
-    "Z": "městská část / městský obvod",
+    "S": "statutární město",
+    "T": "městys",
+    "U": "vojenský újezd",
 }
 
 
